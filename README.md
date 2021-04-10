@@ -1,1 +1,1 @@
-# beets-rewrite-plugin
+# beets-canonical-plugin

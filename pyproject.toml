@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "beets-rewrite-plugin"
+name = "beets-canonical-plugin"
 version = "0.1.0"
 description = ""
 authors = ["Hidetoshi Hirokawa <h.hirokawa128@gmail.com>"]

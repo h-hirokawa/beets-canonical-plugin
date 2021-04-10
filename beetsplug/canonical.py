@@ -5,11 +5,11 @@ import mediafile
 from beets.plugins import BeetsPlugin
 
 
-class RewritePlugin(BeetsPlugin):
+class CanonicalPlugin(BeetsPlugin):
     artists_fields = (u'artist', u'albumartist')
 
     def __init__(self, *args, **kwargs):
-        super(RewritePlugin, self).__init__(*args, **kwargs)
+        super(CanonicalPlugin, self).__init__(*args, **kwargs)
         self.config.add({
             'artist_credit': False,
             'albumartist_credit': False,
