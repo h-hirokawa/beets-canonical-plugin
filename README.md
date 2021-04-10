@@ -1,0 +1,1 @@
+# beets-rewrite-plugin
