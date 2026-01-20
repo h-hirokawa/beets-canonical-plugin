@@ -10,7 +10,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-beets = "^1.4.9"
+beets = ">=1.4.9"
 
 [tool.poetry.dev-dependencies]
 
