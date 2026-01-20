@@ -16,7 +16,8 @@ class CanonicalPlugin(BeetsPlugin):
             'original_date': False,
             'album_disambig': False
         })
-        self.register_listener('album_imported', self.album_imported)
+        self.register_listener('albuminfo_received', self.albuminfo_received)
+        # self.register_listener('album_imported', self.album_imported)
         self.register_listener('write', self.write)
 
         for field in self.artists_fields:
@@ -34,25 +35,24 @@ class CanonicalPlugin(BeetsPlugin):
             mediafile.MP4StorageStyle('----:com.apple.iTunes:Date Canonical'),
             mediafile.StorageStyle('DATE_CANONICAL'),
             mediafile.ASFStorageStyle('WM/Date Canonical'))
+        self.add_media_field('date_canonical', date_canonical)
         for df in ('year', 'month', 'day'):
             self.add_media_field(
                 '{}_canonical'.format(df), getattr(date_canonical, '{}_field'.format(df))()
             )
 
-    def write(self, item, path, tags):
-        for field in self.artists_fields:
-            canonical_field = '{}_canonical'.format(field)
-            credit_field = '{}_credit'.format(field)
-            tags[canonical_field] = item[canonical_field] = item[field]
-            if self.config[credit_field]:
-                tags[field] = item[field] = item[credit_field] or item[field]
+        original_date_alt = mediafile.DateField(
+            mediafile.MP4StorageStyle('----:com.apple.iTunes:ORIGINALDATE'))
+        self.add_media_field('original_date_alt', original_date_alt)
         for df in ('year', 'month', 'day'):
-            canonical_date_field = '{}_canonical'.format(df)
-            tags[canonical_date_field] = item[canonical_date_field] = item[df]
-            if self.config['original_date']:
-                tags[df] = item[df] = item['original_{}'.format(df)]
-        if self.config['album_disambig']:
-            tags['album'] = item.evaluate_template('$album%aunique{albumartist album, albumtype albumdisambig original_year country year}')
+            self.add_media_field(
+                'original_{}_alt'.format(df), getattr(original_date_alt, '{}_field'.format(df))()
+            )
+
+    def write(self, item, path, tags):
+        for field in ("date_canonical", "original_date_alt"):
+            if field in tags:
+                tags.pop(field)
 
     def album_imported(self, lib, album):
         item = album.items()[0]
@@ -60,3 +60,26 @@ class CanonicalPlugin(BeetsPlugin):
             album[f] = item[f]
             album['{}_canonical'.format(f)] = item['{}_canonical'.format(f)]
         album.store()
+
+    def albuminfo_received(self, info):
+        info['albumartist_canonical'] = info.get('artist')
+        if self.config['albumartist_credit']:
+            info['artist'] = info['artist_credit']
+
+        for df in ('year', 'month', 'day'):
+            canonical_date_field = '{}_canonical'.format(df)
+            original_date_field = 'original_{}'.format(df)
+            original_date_alt_field = 'original_{}_alt'.format(df)
+            if info[df]:
+                info[canonical_date_field] = str(info[df])
+            if info[original_date_field]:
+                info[original_date_alt_field] = str(info[original_date_field])
+            if self.config['original_date']:
+                info[df] = info[original_date_field]
+
+        for track in info['tracks']:
+            track['artist_canonical'] = track['artist']
+            if self.config['artist_credit']:
+                track['artist'] = track['artist_credit']
+        # if self.config['album_disambig']:
+        #     info['album'] = item.evaluate_template('$album%aunique{albumartist album, albumtype albumdisambig original_year country year}')
